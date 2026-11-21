@@ -1,0 +1,13 @@
+project_id = "oopnest"
+
+[auth]
+additional_redirect_urls = ["http://localhost:3000/", "http://127.0.0.1:3000/"]
+enable_signup = true
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[functions.compile]
+verify_jwt = true

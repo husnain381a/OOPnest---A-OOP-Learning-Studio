@@ -1,4 +1,4 @@
-# OOPnest design
+# OOPnest desig
 
 An approachable study workspace for university students, in Operate mode for dashboard/editor and Read mode for lessons. Warm cream surfaces, forest green primary actions and restrained peach, sage, blue and mauve topic illustrations. The visual emphasis is the relationship between a familiar object and its code representation.
 

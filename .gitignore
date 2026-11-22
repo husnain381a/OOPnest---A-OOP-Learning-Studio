@@ -1,6 +1,8 @@
 node_modules
 .next
 out
+dist
+supabase/.temp/
 .env*
 !.env.example
 *.tsbuildinfo

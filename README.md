@@ -1,54 +1,61 @@
-# OOPnest
+# PFnest · PF Step by Step
 
-A Next.js 15 + React 19 + Tailwind 4 C++ OOP learning studio. Supabase supplies authentication, Postgres persistence and a server-side compiler proxy. The application is statically exported, so it works on Sites or another static host; account and execution operations go to Supabase.
+A browser-based Programming Fundamentals course for first-semester BS CS and Software Engineering students at USKT. The interface uses simple English. Prompts and feedback mix Roman Urdu and English.
 
 ## Run locally
 
+Use Node.js 22.18+ and npm. Students only need a browser.
+
 ```sh
 npm ci
-cp .env.example .env.local
 npm run dev
 ```
 
-Build with `npm run build`; deploy `out/`. Never place compiler keys or a Supabase service-role key in a `NEXT_PUBLIC_*` variable.
+Open `http://localhost:5173`. **Try the first problem** opens a practice session. Practice work is cleared on reload. Signed-in student accounts save their work in Supabase.
 
-## Learning workspace
+```sh
+npm run typecheck
+npm test
+npm run build
+```
 
-Log in or create an account to open the dashboard. The workspace includes eight lessons, English/Roman Urdu/Hindi explanations, quizzes, coding challenges, and a C++ playground. Notes and progress sync to the signed-in account. Bookmarks and playground drafts are saved on the device.
+The database test runs the migrations in embedded PostgreSQL. It checks the student and teacher roles, score writes, repeated submissions, lesson unlocking, and section privacy. To run the full browser walkthrough, start the app without Supabase environment variables and run `npm run test:browser`. Set `PFNEST_BROWSER` if Chrome or Edge is installed in a different location. `PFNEST_TEST_URL` can point the walkthrough at a preview of the production build.
 
 ## Connect Supabase
 
-1. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the build environment, then rebuild. Existing deployments can continue using `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Row-level security protects account records.
-2. With Supabase CLI v3, preview and apply the included migrations before enabling accounts. Replace `YOUR_PROJECT_REF` with your project reference. [Supabase CLI reference](https://supabase.com/docs/reference/cli/supabase-db-push)
+1. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to `.env.local` using [.env.example](.env.example). Restart Vite after changing them. The browser only needs the project URL and publishable key.
+2. Authenticate the Supabase CLI to the intended project. Preview the migrations before applying them. `20261122113202_pfnest_curriculum_events.sql` adds the PF profiles, grade records, settings and reports, and depends on the two tracked OOPnest schema migrations. Keep any other in-progress migrations out of the deployment checkout unless they are part of the intended release. [Supabase CLI reference](https://supabase.com/docs/reference/cli/supabase-db-push)
 
    ```sh
    supabase db push --remote=YOUR_PROJECT_REF --dry-run
    supabase db push --remote=YOUR_PROJECT_REF
-   supabase migration list --remote=YOUR_PROJECT_REF
+   supabase functions deploy pfn-learning --remote=YOUR_PROJECT_REF --use-api
    ```
-3. Enable email and password signup in Supabase Auth and turn off Confirm email so signup opens a session immediately. To apply the included settings, preview with `supabase config diff --remote=YOUR_PROJECT_REF`, then run `supabase config push --remote=YOUR_PROJECT_REF`. [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords)
-4. Register the administrator and find the intended account’s UUID in Supabase Auth. Promote it with `update public.profiles set role='admin' where id='YOUR_USER_UUID';`. Admins can view the student directory and lesson completion. Student notes stay private.
-5. Create a student account, confirm it opens the dashboard, sign out, and log back in with the same password.
 
-## Connect OnlineCompiler
+3. In Auth, enable email/password signup, disable **Confirm email**, and set an eight-character minimum password. Set the site URL to your deployed site. Student sign-in uses a deterministic internal email based on the section and roll number. Students enter only their roll number, section and password. [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords)
+4. Set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in a private shell or in your ignored `.env.local`, then run `npm run teacher:create`. The script creates `aimenansari008@gmail.com` with the teacher role and prints a randomly generated password once. Save it in a password manager. If that email already exists in the project, verify that account with Aimen before transferring its role or changing credentials. [Supabase admin account API](https://supabase.com/docs/reference/javascript/auth-admin-createuser)
+5. Do a live check with one student account. Submit an activity, sign out, sign back in, and confirm the score is present. Sign in through **Teacher** and check the same student's progress and section. The teacher can turn the leaderboard off from the dashboard.
 
-1. Obtain an OnlineCompiler API key and save it as the Supabase Edge Function secret `COMPILER_API_KEY`. The adapter sends programs and stdin to the C++17 runtime and returns output and compiler diagnostics. [OnlineCompiler API reference](https://onlinecompiler.io/docs/run-code)
-2. Set the Supabase Edge Function secret `APP_ORIGINS` to a comma-separated list of app origins such as `https://oopnest.example,http://localhost:3000`. Origins have no trailing slash.
-3. Deploy with `supabase functions deploy compile --remote=YOUR_PROJECT_REF --use-api`. The function verifies identity, checks browser origins, limits submissions and allows up to 10 runs per minute per account.
-4. Sign in and run an original example, an edited example that reads stdin, and an example with a syntax error. The terminal shows output, compile errors and timeout messages.
+The Edge Function validates the caller through Supabase Auth and writes the graded result. Its server credential stays in the Edge Function environment. `SUPABASE_SECRET_KEY` and management access tokens are private. [Supabase Edge Function authentication](https://supabase.com/docs/guides/functions/auth)
 
-## Architecture and boundaries
+## Deploy to Vercel
 
-- `app/page.tsx`: authenticated learning workspace.
-- `app/auth-screen.tsx`: email and password login and signup.
-- `lib/content.ts`: eight lessons, quizzes and external resources.
-- `lib/supabase.ts`: Supabase browser client.
-- `supabase/migrations/`: profiles, progress, notes, RLS and compiler limiter.
-- `supabase/functions/compile/`: authenticated compiler adapter.
-- Accounts, admin queries and live compilation require setup; no fabricated student directory or simulated compiler output is presented as live data.
-- Quiz completion is self-reported educational progress, not an assessment security boundary.
-- A custom domain and open student access still need hosting/domain configuration. The initial hosted review is private.
+Import the repository into Vercel. The included `vercel.json` uses the Vite preset, builds with `npm run build`, and serves `dist/`. Add the two `VITE_` variables in Vercel's build environment and choose Node.js 22 or 24. The frontend uses hash-based lesson navigation, so direct lesson URLs work on Vercel. [Vite deployment guide for Vercel](https://vite.dev/guide/static-deploy.html#vercel)
 
-## Design guidance consulted
+## Course and points
 
-User-provided Skills.pdf lists repositories. Relevant source guidance reviewed: UI UX Pro Max (design-system and Next.js guidance), Superpowers (verification before completion), Taste (marketing guidance reviewed; its full-screen marketing layout does not fit a learning workspace), Impeccable (Operate/Read guidance) and Matt Pocock’s codebase-design guidance. Relevance is determined by this education workspace, rather than applying unrelated job-search, slide or research tools.
+- **Socho** has 10 everyday problems and a short comparison quiz. Students sort IPO cards, reorder steps, write their own steps, build a flowchart, and compare methods. A different valid set of steps can earn 10 bonus points.
+- **Hisab** has eight calculations. Students apply the same approach through the flowchart, then write numbered pseudocode and give the result. The term *algorithm* first appears after the student puts the steps in order in the first Hisab lesson.
+- **Pehla Code** has five `cout` lessons. Students must predict the output before running an edited program. The simulator supports `\n`, `\t`, `\a`, `\\`, `\"`, chaining and `endl`. Alert signals appear as a note on screen.
+- **Ahista Ahista Agay** is the Module 4 shell. The planned lesson order is ready and every lesson remains locked.
+
+Score tracking starts in Socho so its activity points and optional second-solution bonus count. IPO and ordered steps earn 10 each, a flowchart earns 20, pseudocode and the comparison quiz earn 10 each, a correct run earns 20, and a correct first prediction earns 15. Wrong checks cost zero. A requested hint costs two points, with up to three per lesson. Displayed totals have a floor of zero. Streaks use Pakistan time.
+
+Free-text practice uses a small, lesson-specific rubric covering key actions, line counts, final results, and the difference between two approaches. This can miss an unusual valid phrasing. Practice scores are intended for classroom feedback.
+
+## Source layout
+
+- `index.html`, `src/` and `vite.config.mjs` are the PFnest web app. Change `appName` in `src/client.ts` and the static page title in `index.html` to update the working title.
+- `supabase/functions/_shared/` contains the course, grading logic, and `cout` parser used in the browser and on the server.
+- `supabase/functions/pfn-learning/` is the authenticated grading endpoint. The PF migration stores one result per submission and prevents duplicate points and skipped activities.
+- Older Next.js sources and OOP migration history in this workspace are separate from the Vite build.
